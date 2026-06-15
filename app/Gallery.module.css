@@ -1,0 +1,224 @@
+/* ─── Content canvas ────────────────────────────────────────── */
+.galleryContent {
+  position: relative;
+  width: 100%;
+  min-height: 2200px;
+  padding-bottom: 100px;
+}
+
+/* ─── Set wrapper ───────────────────────────────────────────── */
+/*
+ * Only handles absolute positioning and flex layout.
+ * NO animation, NO transform — keeping this transform-free is what
+ * allows the children's backdrop-filter to sample the wallpaper
+ * throughout the entire fly-in/out animation.
+ */
+.setWrap {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: clamp(240px, 26vw, 320px);
+}
+
+/* ─── Main island — image card ──────────────────────────────── */
+/*
+ * overflow:hidden is safe here because this element has no backdrop-filter.
+ * It clips the image to the border-radius without causing blur issues.
+ * Animation classes are applied directly to this element.
+ */
+.mainIsland {
+  width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow:
+    0 2px 0  rgba(255,255,255,0.20) inset,
+    0 20px 60px rgba(0,0,0,0.50),
+    0 4px  16px rgba(0,0,0,0.30);
+  position: relative;
+  z-index: 0;
+}
+
+.projectImg {
+  width: 100%;
+  height: auto;
+  display: block;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+/*
+ * Vertical (portrait) variant — applied alongside .projectImg when an island's
+ * `orientation` is "vertical". Switches the frame to a 4:5 portrait aspect; the
+ * <img> intrinsic dimensions in Gallery.tsx match this ratio so no layout shift
+ * occurs. object-fit: cover still fills the frame regardless of the source's
+ * native aspect.
+ */
+.projectImgVertical {
+  aspect-ratio: 4 / 5;
+}
+
+/* ─── Secondary island — floating caption card ──────────────── */
+/*
+ * Uses the global .glass class (backdrop-filter + border etc.).
+ * Animation classes are applied directly here so that backdrop-filter
+ * and the CSS transform live on the SAME element — the only reliable
+ * pattern for blur to apply during animation (matches how bio islands work).
+ *
+ * Overlaps the bottom of the image card via margin-top: -28px and z-index: 1.
+ * Width is narrower than main so the image peeks out behind it.
+ * Horizontal anchor (left/center/right) is varied per set for visual rhythm.
+ */
+.secIsland {
+  margin-top: -28px;
+  position: relative;
+  z-index: 1;
+  width: 72%;
+  padding: 12px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.secLeft   { align-self: flex-start; margin-left: 14px; }
+.secCenter { align-self: center; }
+.secRight  { align-self: flex-end;   margin-right: 14px; }
+
+.projTitle {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.85);
+}
+
+.projCaption {
+  font-family: var(--font-mono);
+  font-size: 0.60rem;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.36);
+}
+
+/* ─── Animation states ──────────────────────────────────────── */
+/*
+ * These classes are applied to .mainIsland and .secIsland individually,
+ * NOT to the .setWrap wrapper. See comment in CodePage.tsx for why.
+ */
+.gone {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/*
+ * Resting state for the .secIsland.glass caption card.
+ *
+ * The idle float animates the INDEPENDENT `translate` property (not `transform`)
+ * so it stays cheap and composites cleanly. `translate: 0 0` is the base value.
+ * This glass element has no transformed ancestor, so backdrop-filter keeps
+ * sampling the wallpaper (README invariant).
+ */
+.resting {
+  opacity: 1;
+  translate: 0 0;
+  animation: idleFloat 7s ease-in-out infinite;
+}
+
+@keyframes idleFloat {
+  0%, 100% { translate: 0 0; }
+  50%      { translate: 0 -7px; }
+}
+
+.flyInLeft  { animation: flyInLeft  2s 0.1s var(--ease-out) both; }
+.flyInRight { animation: flyInRight 2s 0.1s var(--ease-out) both; }
+.flyOutLeft  { animation: flyOutLeft  1.2s var(--ease-out) forwards; }
+.flyOutRight { animation: flyOutRight 1.2s var(--ease-out) forwards; }
+
+@keyframes flyInLeft {
+  from { transform: translateX(-160px); opacity: 0; }
+  to   { transform: translateX(0);      opacity: 1; }
+}
+@keyframes flyInRight {
+  from { transform: translateX(160px);  opacity: 0; }
+  to   { transform: translateX(0);      opacity: 1; }
+}
+@keyframes flyOutLeft {
+  from { transform: translateX(0);      opacity: 1; }
+  to   { transform: translateX(-160px); opacity: 0; }
+}
+@keyframes flyOutRight {
+  from { transform: translateX(0);      opacity: 1; }
+  to   { transform: translateX(160px);  opacity: 0; }
+}
+
+/* ─── Scroll-progress affordance (Req 9.7) ──────────────────── */
+/*
+ * A thin, glass-tinted bar fixed to the top of the gallery scroll container.
+ * `position: fixed` pins it to the viewport (the scroll root fills the viewport
+ * via inset:0), so it stays in place while the gallery content scrolls beneath.
+ *
+ * Progress is expressed by the `--scroll-progress` custom property (0..1)
+ * written by useScrollProgress; the bar reveals left→right via scaleX with a
+ * left transform-origin. Using a GPU-composited transform (not width) keeps the
+ * update off the layout path. `pointer-events: none` keeps it inert; the high
+ * z-index keeps it above the gallery content but below the central island (100).
+ */
+.scrollProgress {
+  --scroll-progress: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  transform: scaleX(var(--scroll-progress, 0));
+  transform-origin: left center;
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.30),
+    rgba(255,255,255,0.65)
+  );
+  box-shadow: 0 0 8px rgba(255,255,255,0.30);
+  pointer-events: none;
+  z-index: 30;
+}
+
+/* ─── Reduced motion (Req 10.1, 10.2, 10.3) ─────────────────── */
+/*
+ * When the visitor requests reduced motion, all non-essential gallery
+ * motion is disabled while every island stays in its visible/resting,
+ * readable appearance (opacity:1). Specifically:
+ *  - Fly-in/out scroll-reveal animations are neutralized (animation: none)
+ *    so islands appear in place instead of sliding (Req 10.1).
+ *  - The idle-float drift and the parallax resting transform are removed
+ *    so resting islands hold still (Req 10.1).
+ *  - The static glass-refraction filter on the image card is dropped
+ *    (Req 10.1) — content remains fully legible.
+ *  - The scroll-progress affordance is rendered without transition/motion;
+ *    it still reflects progress via its transform custom property but does
+ *    not animate (Req 10.3).
+ * Content visibility is never gated on motion (Req 10.2).
+ */
+@media (prefers-reduced-motion: reduce) {
+  .flyInLeft,
+  .flyInRight,
+  .flyOutLeft,
+  .flyOutRight {
+    animation: none;
+    opacity: 1;
+  }
+
+  .resting {
+    animation: none;
+    transform: none;
+    translate: none;
+    opacity: 1;
+  }
+
+  .mainIsland {
+    filter: none;
+  }
+
+  .scrollProgress {
+    transition: none;
+  }
+}

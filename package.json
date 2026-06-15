@@ -1,0 +1,31 @@
+{
+  "name": "portfolio",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "optimize:wallpapers": "node scripts/optimize-wallpapers.mjs"
+  },
+  "dependencies": {
+    "next": "14.2.3",
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.6",
+    "@testing-library/react": "^16.0.0",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@vitejs/plugin-react": "^4.3.1",
+    "fast-check": "^3.19.0",
+    "jsdom": "^24.1.0",
+    "sharp": "^0.34.5",
+    "typescript": "^5",
+    "vitest": "^1.6.0"
+  }
+}

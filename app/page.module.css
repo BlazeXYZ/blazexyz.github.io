@@ -1,0 +1,268 @@
+/* ─── Shell ─────────────────────────────────────────────────── */
+.shell {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+.shellReady { opacity: 1; }
+
+/* ─── SVG filter defs ───────────────────────────────────────── */
+.svgDefs {
+  position: absolute;
+  width: 0; height: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ─── Wallpapers ────────────────────────────────────────────── */
+.wallpaperWrap { position: absolute; inset: 0; z-index: 0; }
+.wallpaper {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center;
+  opacity: 0; transition: opacity 0.9s ease;
+}
+.wallActive  { opacity: 1; }
+.wallBio     { background-image: url('/bioWallpaper.webp');    }
+.wallPhotos  { background-image: url('/photosWallpaper.webp'); }
+.wallCode    { background-image: url('/codingWallpaper.webp'); }
+.vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.48) 100%);
+}
+
+/* ─── Central island ────────────────────────────────────────── */
+.central {
+  position: fixed;   /* viewport-anchored — unaffected by scroll or parent stacking */
+  z-index: 100;      /* always above content islands (z-index: 20) */
+  width: var(--island-w);
+  padding: 28px 24px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition:
+    top       2s var(--ease-out),
+    left      2s var(--ease-out),
+    transform 2s var(--ease-out);
+}
+.centralBio    { top: 50%; left: 50%;                                    transform: translate(-50%, -50%); }
+.centralPhotos { top: 40px; left: 40px;                                  transform: translate(0, 0);       }
+.centralCode   { top: 40px; left: calc(100vw - var(--island-w) - 40px); transform: translate(0, 0);       }
+
+/* First-load entry: drop in from above, fade up */
+.centralFirst {
+  animation: centralIn 2s 0.2s var(--ease-out) both;
+}
+@keyframes centralIn {
+  from { transform: translate(-50%, calc(-50% - 80px)); opacity: 0; }
+  to   { transform: translate(-50%, -50%);               opacity: 1; }
+}
+
+/* ─── Avatar ────────────────────────────────────────────────── */
+.avatar {
+  width: 88px; height: 88px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.30);
+  overflow: hidden;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.35) inset, 0 4px 20px rgba(0,0,0,0.45);
+  margin-bottom: 4px;
+  background: rgba(255,255,255,0.06);
+}
+.avatarInner {
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.02) 100%);
+}
+
+/* ─── Name / pronouns ───────────────────────────────────────── */
+.name {
+  font-family: var(--font-mono);
+  font-size: 0.80rem; font-weight: 400; letter-spacing: 0.10em;
+  color: rgba(255,255,255,0.90); text-align: center; margin-top: 2px;
+}
+.pronouns {
+  font-family: var(--font-mono);
+  font-size: 0.58rem; letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.38); text-transform: lowercase;
+  text-align: center; margin-bottom: 6px;
+}
+
+/* ─── Tab bar ───────────────────────────────────────────────── */
+.tabs {
+  display: flex; width: 100%; gap: 3px;
+  background: rgba(0,0,0,0.22); border-radius: 14px;
+  padding: 3px; margin-top: 4px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.tab {
+  flex: 1; background: none; border: none; cursor: pointer;
+  font-family: var(--font-mono); font-size: 0.58rem; font-weight: 400;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: rgba(255,255,255,0.40); padding: 6px 4px; border-radius: 11px;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.tab:hover { color: rgba(255,255,255,0.72); }
+.tabActive {
+  background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.92);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.22) inset, 0 2px 6px rgba(0,0,0,0.30);
+}
+
+/* ─── Bio content islands ───────────────────────────────────── */
+/*
+ * Resting positions: centered at 25vw and 75vw horizontally.
+ * Half-width = clamp(110px, 11vw, 150px)  [half of clamp(220px,22vw,300px)]
+ *
+ * .bioLeft  center = 25vw  →  left = 25vw  - clamp(110px,11vw,150px)
+ * .bioRight center = 75vw  →  left = 75vw  - clamp(110px,11vw,150px)
+ *
+ * Animation: all four states are pure @keyframes so there is zero
+ * conflict between animation fill-modes and CSS transitions.
+ * Left island flies from the left edge; right from the right edge.
+ * Both fade opacity 0→1 on entry and 1→0 on exit.
+ */
+.bioIsland {
+  position: absolute;
+  z-index: 20;
+  width: 22vw; min-width: 220px; max-width: 300px;
+  top: 50%;
+  padding: 28px 22px 36px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+
+.bioLeft  { left: calc(25vw  - clamp(110px, 11vw, 150px)); }
+.bioRight { left: calc(75vw  - clamp(110px, 11vw, 150px)); }
+
+/* ── Entering ── */
+.bioIsland_entering { pointer-events: none; }
+
+.bioLeft.bioIsland_entering {
+  animation: flyInLeft 2s 0.2s var(--ease-out) both;
+}
+.bioRight.bioIsland_entering {
+  animation: flyInRight 2s 0.2s var(--ease-out) both;
+}
+
+/* ── Visible (resting) ── */
+.bioIsland_visible {
+  transform: translateY(-50%);
+  opacity: 1;
+}
+
+/* ── Exiting ── */
+.bioIsland_exiting { pointer-events: none; }
+
+.bioLeft.bioIsland_exiting {
+  animation: flyOutLeft 1.2s var(--ease-out) forwards;
+}
+.bioRight.bioIsland_exiting {
+  animation: flyOutRight 1.2s var(--ease-out) forwards;
+}
+
+/* ── Hidden ── (not rendered in DOM, but just in case) */
+.bioIsland_hidden { opacity: 0; pointer-events: none; }
+
+/* ─── Keyframes ─────────────────────────────────────────────── */
+/*
+ * "Fly in": starts off to the side (within the viewport — just off the
+ * resting left position by one island-width worth), opacity 0, lands at
+ * resting position, opacity 1.
+ *
+ * We use translateX relative to the resting left so the island always
+ * composites over the wallpaper (blur is applied from frame 0).
+ */
+@keyframes flyInLeft {
+  from { transform: translateY(-50%) translateX(-180px); opacity: 0; }
+  to   { transform: translateY(-50%) translateX(0);      opacity: 1; }
+}
+@keyframes flyInRight {
+  from { transform: translateY(-50%) translateX(180px);  opacity: 0; }
+  to   { transform: translateY(-50%) translateX(0);      opacity: 1; }
+}
+@keyframes flyOutLeft {
+  from { transform: translateY(-50%) translateX(0);      opacity: 1; }
+  to   { transform: translateY(-50%) translateX(-180px); opacity: 0; }
+}
+@keyframes flyOutRight {
+  from { transform: translateY(-50%) translateX(0);      opacity: 1; }
+  to   { transform: translateY(-50%) translateX(180px);  opacity: 0; }
+}
+
+/* ─── Island typography ─────────────────────────────────────── */
+.islandHeading {
+  font-family: var(--font-mono); font-size: 0.68rem; font-weight: 400;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: rgba(255,255,255,0.82);
+  padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+.islandText {
+  font-family: var(--font-mono); font-size: 0.72rem; line-height: 1.85;
+  letter-spacing: 0.02em; color: rgba(255,255,255,0.46); font-weight: 300;
+}
+
+/* ─── Gallery scroll container (Photos + Projects) ─────────── */
+/*
+ * Sits above the wallpaper (z-index 15) but below the central island
+ * (z-index 100). position:absolute inside the fixed .shell makes it a
+ * fixed-size overlay that independently scrolls over the wallpaper.
+ * Shared by both the Photos and Projects galleries.
+ */
+.galleryScroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 15;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.18) transparent;
+}
+.galleryScroll::-webkit-scrollbar       { width: 4px; }
+.galleryScroll::-webkit-scrollbar-track { background: transparent; }
+.galleryScroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 2px; }
+
+/* ─── Reduced motion (Req 10.1, 10.2, 10.4) ─────────────────── */
+/*
+ * Disables/neutralizes non-essential motion while keeping all content
+ * visible and readable, and preserves the flash-of-black prevention gate.
+ *
+ *  - Bio island fly-in/out keyframes are neutralized so the islands appear
+ *    in place at their resting position/opacity (Req 10.1, 10.2).
+ *  - The central island's first-load `centralIn` entry animation is removed
+ *    and its 2s top/left/transform repositioning transition is made instant,
+ *    so section changes reposition without sweeping motion (Req 10.1).
+ *  - The wallpaper crossfade is reduced to a minimal/instant opacity change
+ *    (Req 10.4). The `.shell` opacity gate (flash-of-black prevention) is
+ *    intentionally LEFT INTACT — the shell still stays hidden until
+ *    `wallReady`; only its fade is shortened, never disabled, so the gate
+ *    is preserved (Req 10.4).
+ */
+@media (prefers-reduced-motion: reduce) {
+  .bioLeft.bioIsland_entering,
+  .bioRight.bioIsland_entering,
+  .bioLeft.bioIsland_exiting,
+  .bioRight.bioIsland_exiting {
+    animation: none;
+    transform: translateY(-50%);
+    opacity: 1;
+  }
+
+  .central {
+    transition: none;
+  }
+
+  .centralFirst {
+    animation: none;
+  }
+
+  /* Minimal/instant wallpaper crossfade; shell gate kept intact below. */
+  .wallpaper {
+    transition: opacity 0.01s linear;
+  }
+
+  /* Keep the flash-of-black gate (opacity 0 → 1 on wallReady), but shorten
+     the shell fade so it appears near-instantly without a slow sweep. */
+  .shell {
+    transition: opacity 0.01s linear;
+  }
+}
